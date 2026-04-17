@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.3
 
 import PackageDescription
 
@@ -22,13 +22,9 @@ let package = Package(
             dependencies: [],
             path: "Sources/SpaceUI",
             resources: [
-                 .process("Resources")
+                .process("Resources/Orbitron-Medium.ttf"),
+                .copy("Resources/SpaceBackground.png")
             ]
-        ),
-        .testTarget(
-            name: "SpaceUITests",
-            dependencies: ["SpaceUI"],
-            path: "Tests/SpaceUITests"
         )
     ]
 )
