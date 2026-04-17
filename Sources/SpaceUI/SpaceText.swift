@@ -104,15 +104,16 @@ public struct SpaceSubtitle: View {
 }
 
 public extension Font {
-    public static func orbitron_medium(_ textStyle: TextStyle = .body) -> Font {
-        .custom("Orbitron-Medium", size: 16, relativeTo: textStyle)
+    static func orbitron_medium(_ textStyle: TextStyle = .body) -> Font {
+        let size = UIFont.preferredFont(forTextStyle: textStyle.uiTextStyle).pointSize
+        return .custom("Orbitron-Medium", size: size, relativeTo: textStyle)
     }
     
-    public static func din_alternate(_ textStyle: TextStyle = .body) -> Font {
-        .custom("DIN Alternate", size: 16, relativeTo: textStyle)
+    static func din_alternate(_ textStyle: TextStyle = .body) -> Font {
+        let size = UIFont.preferredFont(forTextStyle: textStyle.uiTextStyle).pointSize
+        return .custom("DIN Alternate", size: size, relativeTo: textStyle)
     }
 }
-
 
 public extension Font.TextStyle {
     public var uiTextStyle: UIFont.TextStyle {
