@@ -31,7 +31,7 @@ public struct SpaceButton<L: View>: View {
         self.highlighted = highlighted
     }
     
-    init(
+    public init(
         _ title: String,
         role: SpaceUIRole = .normal,
         highlighted: Bool = false,
@@ -63,7 +63,7 @@ public struct SpaceButton<L: View>: View {
     }
 }
 public struct SpaceToggle<L: View>: View {
-    @Binding var isOn: Bool
+    @Binding public var isOn: Bool
     
     let label: () -> L
     var role: SpaceUIRole = .normal
@@ -157,7 +157,7 @@ public struct SpaceButtonTwoStep<L: View>: View {
 public struct SpaceTextField: View {
     var titleKey: String? = nil
     var placeholder: String = ""
-    @Binding var text: String
+    @Binding public var text: String
     var role: SpaceUIRole = .normal
     var highlighted: Bool? = nil
     
