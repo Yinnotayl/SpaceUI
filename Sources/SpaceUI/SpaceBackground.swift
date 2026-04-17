@@ -14,7 +14,7 @@ public struct SpaceBackground: View {
 }
 extension View {
     @ViewBuilder
-    func spaceBackground(clipped: Bool = false) -> some View {
+    public func spaceBackground(clipped: Bool = false) -> some View {
         Group {
             if clipped {
                 self.background(
