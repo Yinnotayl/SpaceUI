@@ -7,7 +7,7 @@ import UIKit
 
 public let spaceFontName: String = "Orbitron-Medium"
 
-@discardableResult public func registerFont(named name: String = spaceFontName, withExtension ext: String = "ttf") -> Bool {
+@discardableResult public func registerFont(named name: String = spaceFontName, withExtension ext: String = "ttf", showSuccess: Bool = false) -> Bool {
     guard let url = Bundle.module.url(forResource: name, withExtension: ext) else {
         print("Font not found: \(name).\(ext)")
         return false
@@ -18,9 +18,48 @@ public let spaceFontName: String = "Orbitron-Medium"
     
     if let error = error?.takeUnretainedValue() {
         print("Font registration error: \(error)")
+    } else if showSuccess {
+        print("Font \"\(name)\" registered successfully")
     }
     
     return success
+}
+
+public enum SpaceFont {
+    case orbitron_medium
+    case din_alternate
+    
+    public func fontSize(_ style: Font.TextStyle) -> Font {
+        switch self {
+        case .orbitron_medium:
+            return .orbitron_medium(style)
+        case .din_alternate:
+            return .din_alternate(style)
+        }
+    }
+    
+    public static func register(_ showSuccess: Bool = false) {
+        registerFont(named: spaceFontName, withExtension: "ttf", showSuccess: showSuccess)
+    }
+}
+
+public extension Font.TextStyle {
+    public var uiTextStyle: UIFont.TextStyle {
+        switch self {
+        case .largeTitle: return .largeTitle
+        case .title: return .title1
+        case .title2: return .title2
+        case .title3: return .title3
+        case .headline: return .headline
+        case .subheadline: return .subheadline
+        case .body: return .body
+        case .callout: return .callout
+        case .footnote: return .footnote
+        case .caption: return .caption1
+        case .caption2: return .caption2
+        @unknown default: return .body
+        }
+    }
 }
 
 
@@ -115,43 +154,6 @@ public extension Font {
     }
 }
 
-public extension Font.TextStyle {
-    public var uiTextStyle: UIFont.TextStyle {
-        switch self {
-        case .largeTitle: return .largeTitle
-        case .title: return .title1
-        case .title2: return .title2
-        case .title3: return .title3
-        case .headline: return .headline
-        case .subheadline: return .subheadline
-        case .body: return .body
-        case .callout: return .callout
-        case .footnote: return .footnote
-        case .caption: return .caption1
-        case .caption2: return .caption2
-        @unknown default: return .body
-        }
-    }
-}
-
-
-public enum SpaceFont {
-    case orbitron_medium
-    case din_alternate
-    
-    public func fontSize(_ style: Font.TextStyle) -> Font {
-        switch self {
-        case .orbitron_medium:
-            return .orbitron_medium(style)
-        case .din_alternate:
-            return .din_alternate(style)
-        }
-    }
-    
-    public static func register() {
-        registerFont(named: spaceFontName, withExtension: "ttf")
-    }
-}
 
 
 public extension View {

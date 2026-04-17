@@ -2,7 +2,7 @@
 
 import PackageDescription
 
-let package = Package(
+let package: Package = Package(
     name: "spaceui",
     platforms: [
         .iOS(.v17),
@@ -23,7 +23,7 @@ let package = Package(
             path: "Sources/SpaceUI",
             resources: [
                 .process("Resources/Orbitron-Medium.ttf"),
-                .copy("Resources/SpaceBackground.png")
+                .process("Resources/Assets.xcassets"),
             ]
         )
     ]

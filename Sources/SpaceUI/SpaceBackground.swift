@@ -38,3 +38,14 @@ extension View {
         }
     }
 }
+
+/*
+Sources/
+  SpaceUI/
+    Resources/
+      Assets.xcassets/
+        SpaceBackground.imageset/
+          Contents.json
+          SpaceBackground.png
+        Orbitron-Medium.ttf
+*/

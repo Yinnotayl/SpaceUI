@@ -17,7 +17,7 @@ public struct SpaceButton<L: View>: View {
     var role: SpaceUIRole = .normal
     var highlighted: Bool = false
     
-    @State private var isPressed = false
+    @State private var isPressed: Bool = false
     
     public init(
         role: SpaceUIRole = .normal,
@@ -62,6 +62,7 @@ public struct SpaceButton<L: View>: View {
         .animation(.bouncy, value: highlighted)
     }
 }
+
 public struct SpaceToggle<L: View>: View {
     @Binding public var isOn: Bool
     
@@ -103,6 +104,7 @@ public struct SpaceToggle<L: View>: View {
         }
     }
 }
+
 public struct SpaceButtonTwoStep<L: View>: View {
     let label: () -> L
     
@@ -111,7 +113,7 @@ public struct SpaceButtonTwoStep<L: View>: View {
     
     var role: SpaceUIRole = .normal
     
-    @State private var isArmed = false
+    @State private var isArmed: Bool = false
     
     public init(
         role: SpaceUIRole = .normal,
