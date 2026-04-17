@@ -103,19 +103,19 @@ public struct SpaceSubtitle: View {
     }
 }
 
-extension Font {
-    static func orbitron_medium(_ textStyle: TextStyle = .body) -> Font {
+public extension Font {
+    public static func orbitron_medium(_ textStyle: TextStyle = .body) -> Font {
         .custom("Orbitron-Medium", size: 16, relativeTo: textStyle)
     }
     
-    static func din_alternate(_ textStyle: TextStyle = .body) -> Font {
+    public static func din_alternate(_ textStyle: TextStyle = .body) -> Font {
         .custom("DIN Alternate", size: 16, relativeTo: textStyle)
     }
 }
 
 
-extension Font.TextStyle {
-    var uiTextStyle: UIFont.TextStyle {
+public extension Font.TextStyle {
+    public var uiTextStyle: UIFont.TextStyle {
         switch self {
         case .largeTitle: return .largeTitle
         case .title: return .title1
@@ -138,7 +138,7 @@ public enum SpaceFont {
     case orbitron_medium
     case din_alternate
     
-    func fontSize(_ style: Font.TextStyle) -> Font {
+    public func fontSize(_ style: Font.TextStyle) -> Font {
         switch self {
         case .orbitron_medium:
             return .orbitron_medium(style)
@@ -147,14 +147,14 @@ public enum SpaceFont {
         }
     }
     
-    static func register() {
+    public static func register() {
         registerFont(named: spaceFontName, withExtension: "ttf")
     }
 }
 
 
-extension View {
-    func spaceTitle(_ font: SpaceFont = .orbitron_medium) -> some View {
+public extension View {
+    public func spaceTitle(_ font: SpaceFont = .orbitron_medium) -> some View {
         self
             .font(
                 font == .orbitron_medium
@@ -164,7 +164,7 @@ extension View {
             .foregroundStyle(.white)
     }
     
-    func spaceTitle2(_ font: SpaceFont = .orbitron_medium) -> some View {
+    public func spaceTitle2(_ font: SpaceFont = .orbitron_medium) -> some View {
         self
             .font(
                 font == .orbitron_medium
@@ -174,7 +174,7 @@ extension View {
             .foregroundStyle(.white)
     }
     
-    func spaceSubtitle(_ font: SpaceFont = .din_alternate) -> some View {
+    public func spaceSubtitle(_ font: SpaceFont = .din_alternate) -> some View {
         self
             .font(
                 font == .orbitron_medium
