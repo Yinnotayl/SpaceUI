@@ -5,7 +5,7 @@ import SwiftUI
 
 public struct SpaceBackground: View {
     public var body: some View {
-        Image("SpaceBackground")
+        Image("SpaceBackground", bundle: .module)
             .resizable()
             .aspectRatio(contentMode: .fill)
             .frame(minWidth: 0, maxWidth: .infinity)
@@ -18,7 +18,7 @@ extension View {
         Group {
             if clipped {
                 self.background(
-                    Image("backgroundSprite")
+                    Image("SpaceBackground", bundle: .module)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 )
