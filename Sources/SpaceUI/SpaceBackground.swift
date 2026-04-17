@@ -4,6 +4,7 @@ import SwiftUI
 // Contains custom background View and View modifier
 
 public struct SpaceBackground: View {
+    public init() {}
     public var body: some View {
         Image("SpaceBackground", bundle: .module)
             .resizable()
