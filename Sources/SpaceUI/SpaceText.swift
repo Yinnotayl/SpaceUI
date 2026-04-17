@@ -147,7 +147,7 @@ public enum SpaceFont {
         }
     }
     
-    func register() {
+    static func register() {
         registerFont(named: spaceFontName, withExtension: "ttf")
     }
 }
