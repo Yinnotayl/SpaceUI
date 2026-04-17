@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SpaceUI",
+    name: "spaceui",
     platforms: [
         .iOS(.v17),
         .macOS(.v14),
