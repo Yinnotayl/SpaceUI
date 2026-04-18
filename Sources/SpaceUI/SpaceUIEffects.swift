@@ -31,7 +31,7 @@ private struct SpaceHoverLiftModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .scaleEffect(isHovered ? 1.02 : 1.0)
-            .shadow(color: .black.opacity(isHovered ? 0.3 : 0), radius: isHovered ? 8 : 0, y: isHovered ? 4 : 0)
+            .shadow(color: .cyan.opacity(isHovered ? 0.3 : 0), radius: isHovered ? 8 : 0, y: isHovered ? 4 : 0)
             .animation(.easeOut(duration: 0.15), value: isHovered)
             .onHover { isHovered = $0 }
     }
