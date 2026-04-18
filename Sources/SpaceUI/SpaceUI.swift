@@ -1,6 +1,4 @@
 import SwiftUI
-import UIKit
-import CoreText
 
 // SpaceUI.swift
 // Contains custom space-styled UI elements

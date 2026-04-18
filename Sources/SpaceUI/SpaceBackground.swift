@@ -6,30 +6,29 @@ import SwiftUI
 public struct SpaceBackground: View {
     public init() {}
     public var body: some View {
-        #if canImport(UIKit)
-        if let uiImage = UIImage(named: "SpaceBackground.png", in: .module, with: nil) {
-            Image(uiImage: uiImage)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .edgesIgnoringSafeArea(.all)
-        }
-        #elseif canImport(AppKit)
-        if let nsImage = Bundle.module.image(forResource: "SpaceBackground.png") {
-            Image(nsImage: nsImage)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .edgesIgnoringSafeArea(.all)
-        }
-        #endif
+        Image("SpaceBackground", bundle: .module)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .ignoresSafeArea()
     }
 }
 
-extension View {
+public extension Image {
+    public static var spaceBackground: Image {
+        Image("SpaceBackground", bundle: .module)
+    }
+}
+
+public extension View {
     @ViewBuilder
     public func spaceBackground(clipped: Bool = false) -> some View {
         if clipped {
-            self.background(SpaceBackground())
-                .clipped()
+            self.background(
+                Image("SpaceBackground", bundle: .module)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            )
         } else {
             ZStack {
                 SpaceBackground()
@@ -38,14 +37,3 @@ extension View {
         }
     }
 }
-
-/*
-Sources/
-  SpaceUI/
-    Resources/
-      Assets.xcassets/
-        SpaceBackground.imageset/
-          Contents.json
-          SpaceBackground.png
-        Orbitron-Medium.ttf
-*/
