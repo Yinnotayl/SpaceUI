@@ -15,14 +15,14 @@ public struct SpaceBackground: View {
 }
 
 public extension Image {
-    public static var spaceBackground: Image {
+    static var spaceBackground: Image {
         Image("SpaceBackground", bundle: .module)
     }
 }
 
 public extension View {
     @ViewBuilder
-    public func spaceBackground(clipped: Bool = false) -> some View {
+    func spaceBackground(clipped: Bool = false) -> some View {
         if clipped {
             self.background(
                 Image("SpaceBackground", bundle: .module)

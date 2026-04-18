@@ -51,6 +51,7 @@ public struct SpaceButton<L: View>: View {
             .spaceTitle2()
             .scaleEffect(isPressed ? 0.98 : (highlighted ? 1.03 : 1.0))
         }
+        .spaceHoverEffect()
         .buttonStyle(.plain)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
@@ -284,4 +285,27 @@ public struct SpaceCard<Content: View>: View {
             }
         }
     }
+}
+
+
+struct SpaceUIPreview: View {
+    init() { SpaceFont.register() }
+    
+    @State private var isOn: Bool = false
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            VStack(spacing: 6) {
+                SpaceTitle("SpaceUI")
+                SpaceSubtitle("Simple SpaceUI showcase")
+            }
+            SpaceCard(title: "Space UI", subtitle: "Space UI is a custom UI style that feelks sci-fi", role: .confirm, highlighted: true)
+            SpaceToggle("Space Toggle Button", isOn: $isOn)
+        }
+        .spaceBackground()
+    }
+}
+
+#Preview("Space Button") {
+    SpaceUIPreview()
 }

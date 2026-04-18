@@ -25,6 +25,11 @@ let package: Package = Package(
                 .process("Resources/Orbitron-Medium.ttf"),
                 .process("Resources/Assets.xcassets"),
             ]
+        ),
+        .testTarget(
+            name: "SpaceUITests",
+            dependencies: ["SpaceUI"],
+            path: "Tests/SpaceUITests"
         )
     ]
 )
