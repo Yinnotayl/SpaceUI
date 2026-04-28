@@ -1,7 +1,7 @@
 import SwiftUI
 
 // SpaceUIEffects.swift
-// Contains custom space effects
+// Contains custom space effects/modifiers
 
 public extension View {
     func spaceGlow(active: Bool = true) -> some View {
@@ -11,6 +11,8 @@ public extension View {
         )
     }
 }
+
+
 
 public extension View {
     @ViewBuilder
@@ -37,3 +39,32 @@ private struct SpaceHoverLiftModifier: ViewModifier {
     }
 }
 #endif
+
+
+
+public extension Image {
+    static var spaceBackground: Image {
+        Image("SpaceBackground", bundle: .module)
+    }
+}
+
+public struct SpaceBackground: View {
+    public init() {}
+    public var body: some View {
+        Image("SpaceBackground", bundle: .module)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .clipped()
+            .ignoresSafeArea()
+    }
+}
+
+public extension View {
+    @ViewBuilder
+    func spaceBackground() -> some View {
+        self
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(SpaceBackground())
+    }
+}
