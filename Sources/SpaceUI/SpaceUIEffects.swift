@@ -68,3 +68,19 @@ public extension View {
             .background(SpaceBackground())
     }
 }
+
+
+private struct SpacePressStyle: ButtonStyle {
+    var highlighted: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : (highlighted ? 1.03 : 1.0))
+            .animation(.bouncy, value: configuration.isPressed)
+    }
+}
+extension View {
+    func spaceButtonPressStyle(highlighted: Bool) -> some View {
+        self.buttonStyle(SpacePressStyle(highlighted: highlighted))
+    }
+}

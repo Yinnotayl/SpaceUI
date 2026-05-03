@@ -34,9 +34,9 @@ public enum SpaceUIRole {
             endPoint: endPoint
         )
     }
+    
     func angularGradient(angle: Angle) -> AngularGradient {
         let colors: [Color] = [self.gradientColour[0], self.gradientColour[1], self.gradientColour[1], self.gradientColour[0]]
-        
         return AngularGradient(
             colors: colors,
             center: .center,
@@ -45,14 +45,26 @@ public enum SpaceUIRole {
     }
 }
 
+// MARK: - Press Style (scroll-safe)
+
+private struct SpacePressStyle: ButtonStyle {
+    var highlighted: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : (highlighted ? 1.03 : 1.0))
+            .animation(.bouncy, value: configuration.isPressed)
+    }
+}
+
+// MARK: - SpaceButton
+
 public struct SpaceButton<L: View>: View {
     let label: () -> L
     let action: @MainActor () -> Void
     
     var role: SpaceUIRole = .normal
     var highlighted: Bool = false
-    
-    @State private var isPressed: Bool = false
     
     public init(
         role: SpaceUIRole = .normal,
@@ -77,20 +89,37 @@ public struct SpaceButton<L: View>: View {
         }
     }
     
-    public init(title: String, subtitle: String, role: SpaceUIRole = .normal, highlighted: Bool = false, action: @escaping @MainActor () -> Void) where L == VStack<TupleView<(AnyView, AnyView)>> {
-        self.label = { VStack(alignment: .leading) {
-            AnyView(Text(title).spaceTitle())
-            AnyView(Text(subtitle).spaceSubtitle())
-        } }
+    public init(
+        title: String,
+        subtitle: String,
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        action: @escaping @MainActor () -> Void
+    ) where L == VStack<TupleView<(AnyView, AnyView)>> {
+        self.label = {
+            VStack(alignment: .leading) {
+                AnyView(Text(title).spaceTitle())
+                AnyView(Text(subtitle).spaceSubtitle())
+            }
+        }
         self.highlighted = highlighted
         self.role = role
         self.action = action
     }
-    public init(title2: String, subtitle: String, role: SpaceUIRole = .normal, highlighted: Bool = false, action: @escaping @MainActor () -> Void) where L == VStack<TupleView<(AnyView, AnyView)>> {
-        self.label = { VStack(alignment: .leading) {
-            AnyView(Text(title2).spaceTitle2())
-            AnyView(Text(subtitle).spaceSubtitle())
-        } }
+    
+    public init(
+        title2: String,
+        subtitle: String,
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        action: @escaping @MainActor () -> Void
+    ) where L == VStack<TupleView<(AnyView, AnyView)>> {
+        self.label = {
+            VStack(alignment: .leading) {
+                AnyView(Text(title2).spaceTitle2())
+                AnyView(Text(subtitle).spaceSubtitle())
+            }
+        }
         self.highlighted = highlighted
         self.role = role
         self.action = action
@@ -105,18 +134,14 @@ public struct SpaceButton<L: View>: View {
                     .spaceSubtitle(.orbitron_medium)
             }
             .spaceTitle2()
-            .scaleEffect(isPressed ? 0.98 : (highlighted ? 1.03 : 1.0))
         }
+        .buttonStyle(SpacePressStyle(highlighted: highlighted))
         .spaceHoverEffect()
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
         .animation(.bouncy, value: highlighted)
     }
 }
+
+// MARK: - SpaceToggle
 
 public struct SpaceToggle<L: View>: View {
     @Binding public var isOn: Bool
@@ -159,6 +184,8 @@ public struct SpaceToggle<L: View>: View {
         }
     }
 }
+
+// MARK: - SpaceButtonTwoStep
 
 public struct SpaceButtonTwoStep<L: View, Trigger: Equatable>: View {
     let label: () -> L
@@ -241,6 +268,8 @@ public struct SpaceButtonTwoStep<L: View, Trigger: Equatable>: View {
     }
 }
 
+// MARK: - SpaceTextField
+
 public struct SpaceTextField: View {
     var titleKey: String? = nil
     var placeholder: String = ""
@@ -253,11 +282,13 @@ public struct SpaceTextField: View {
         self.titleKey = titleKey
         self.placeholder = placeholder
     }
+    
     public init(text: Binding<String>, placeholder: String = "") {
         self._text = text
         self.titleKey = nil
         self.placeholder = placeholder
     }
+    
     public init(_ titleKey: String, text: Binding<String>, placeholder: String = "", role: SpaceUIRole = .normal, highlighted: Bool? = nil) {
         self._text = text
         self.titleKey = titleKey
@@ -265,6 +296,7 @@ public struct SpaceTextField: View {
         self.highlighted = highlighted
         self.role = role
     }
+    
     public init(text: Binding<String>, placeholder: String = "", role: SpaceUIRole = .normal, highlighted: Bool? = nil) {
         self._text = text
         self.titleKey = nil
@@ -288,6 +320,8 @@ public struct SpaceTextField: View {
     }
 }
 
+// MARK: - SpacePanel
+
 public struct SpacePanel<Content: View>: View {
     var content: Content
     var role: SpaceUIRole = .normal
@@ -302,14 +336,14 @@ public struct SpacePanel<Content: View>: View {
         self.role = .normal
         self.customColor = nil
     }
-    public init(role: SpaceUIRole,
-                @ViewBuilder content: () -> Content) {
+    
+    public init(role: SpaceUIRole, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.role = role
         self.customColor = nil
     }
-    public init(color: Color,
-                @ViewBuilder content: () -> Content) {
+    
+    public init(color: Color, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.role = .normal
         self.customColor = color
@@ -331,6 +365,8 @@ public struct SpacePanel<Content: View>: View {
     }
 }
 
+// MARK: - SpaceCard
+
 public struct SpaceCard<Content: View>: View {
     @State private var rotation: Double = 0
     
@@ -345,6 +381,7 @@ public struct SpaceCard<Content: View>: View {
         self.highlighted = highlighted
         self.role = role
     }
+    
     public init(title: String, subtitle: String, role: SpaceUIRole = .normal, highlighted: Bool = false) where Content == VStack<TupleView<(AnyView, AnyView)>> {
         self.content = VStack(alignment: .leading) {
             AnyView(Text(title).spaceTitle())
@@ -353,6 +390,7 @@ public struct SpaceCard<Content: View>: View {
         self.highlighted = highlighted
         self.role = role
     }
+    
     public init(title2: String, subtitle: String, role: SpaceUIRole = .normal, highlighted: Bool = false) where Content == VStack<TupleView<(AnyView, AnyView)>> {
         self.content = VStack(alignment: .leading) {
             AnyView(Text(title2).spaceTitle2())
@@ -374,7 +412,9 @@ public struct SpaceCard<Content: View>: View {
         .overlay(
             RoundedRectangle(cornerRadius: 14)
                 .stroke(
-                    highlighted ? role.angularGradient(angle: .degrees(rotation)).opacity(1) : role.angularGradient(angle: .degrees(rotation)).opacity(0.7),
+                    highlighted
+                        ? role.angularGradient(angle: .degrees(rotation)).opacity(1)
+                        : role.angularGradient(angle: .degrees(rotation)).opacity(0.7),
                     lineWidth: highlighted ? 2 : 1
                 )
         )
@@ -397,46 +437,113 @@ public struct SpaceCard<Content: View>: View {
     }
 }
 
+// MARK: - SpaceListRow
+
 public struct SpaceListRow<Content: View>: View {
     private var content: Content
+    private var role: SpaceUIRole
+    private var highlighted: Bool
+    private var action: (@MainActor () -> Void)?
 
-    public init(@ViewBuilder content: () -> Content) {
+    // Generic content init
+    public init(
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        action: (@MainActor () -> Void)? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
         self.content = content()
+        self.role = role
+        self.highlighted = highlighted
+        self.action = action
     }
-    public init(_ text: String) where Content == HStack<TupleView<(AnyView, Spacer)>> {
+
+    // Single string
+    public init(
+        _ text: String,
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        action: (@MainActor () -> Void)? = nil
+    ) where Content == HStack<TupleView<(AnyView, Spacer)>> {
         self.content = HStack {
             AnyView(Text(text).spaceSubtitle())
             Spacer()
         }
+        self.role = role
+        self.highlighted = highlighted
+        self.action = action
     }
-    public init(title: String, subtitle: String) where Content == HStack<TupleView<(AnyView, Spacer, AnyView)>> {
+
+    // Title + subtitle strings
+    public init(
+        title: String,
+        subtitle: String,
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        action: (@MainActor () -> Void)? = nil
+    ) where Content == HStack<TupleView<(AnyView, Spacer, AnyView)>> {
         self.content = HStack {
             AnyView(Text(title).spaceSubtitle(.orbitron_medium))
             Spacer()
             AnyView(Text(subtitle).spaceSubtitle())
         }
+        self.role = role
+        self.highlighted = highlighted
+        self.action = action
     }
-    public init(title: some View, subtitle: some View) where Content == HStack<TupleView<(AnyView, Spacer, AnyView)>> {
+
+    // Title + subtitle views
+    public init(
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        action: (@MainActor () -> Void)? = nil,
+        title: some View,
+        subtitle: some View
+    ) where Content == HStack<TupleView<(AnyView, Spacer, AnyView)>> {
         self.content = HStack {
             AnyView(title)
             Spacer()
             AnyView(subtitle)
         }
+        self.role = role
+        self.highlighted = highlighted
+        self.action = action
     }
-    public init(title: () -> some View, subtitle: () -> some View) where Content == HStack<TupleView<(AnyView, Spacer, AnyView)>> {
+
+    // Title + subtitle view builders
+    public init(
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        action: (@MainActor () -> Void)? = nil,
+        @ViewBuilder title: () -> some View,
+        @ViewBuilder subtitle: () -> some View
+    ) where Content == HStack<TupleView<(AnyView, Spacer, AnyView)>> {
         self.content = HStack {
             AnyView(title())
             Spacer()
             AnyView(subtitle())
         }
+        self.role = role
+        self.highlighted = highlighted
+        self.action = action
     }
 
     public var body: some View {
-        SpaceCard {
-            content
+        let card = SpaceCard(highlighted: highlighted, role: role) {
+            HStack { content }
+        }
+
+        if let action {
+            Button(action: action) { card }
+                .buttonStyle(SpacePressStyle(highlighted: highlighted))
+                .spaceHoverEffect()
+        } else {
+            card
         }
     }
 }
+
+// MARK: - SpaceSegmentedProgressView
 
 public struct SpaceSegmentedProgressView: View {
     private var fraction: CGFloat
@@ -446,6 +553,7 @@ public struct SpaceSegmentedProgressView: View {
     public init(_ fraction: CGFloat) {
         self.fraction = min(max(fraction, 0), 1)
     }
+    
     public init(_ fraction: CGFloat, segments: Int = 20, fillColor: Color = .cyan) {
         self.fraction = min(max(fraction, 0), 1)
         self.segments = max(segments, 1)
@@ -456,15 +564,16 @@ public struct SpaceSegmentedProgressView: View {
         HStack(spacing: 3) {
             ForEach(0..<segments, id: \.self) { i in
                 let threshold = CGFloat(i + 1) / CGFloat(segments)
-
                 RoundedRectangle(cornerRadius: 2)
                     .fill(threshold <= fraction ? fillColor : Color.white.opacity(0.1))
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: 10)
                     .contentTransition(.interpolate)
             }
         }
     }
 }
+
+// MARK: - Preview
 
 struct SpaceUIPreview: View {
     init() { SpaceFont.register() }
@@ -490,20 +599,18 @@ struct SpaceUIPreview: View {
             SpaceTextField("Space Text Field", text: $text, placeholder: "Type text here")
             SpaceSection("Space Section") {
                 SpaceListRow(title: "Space row Title", subtitle: "subtitle")
-                SpaceListRow(title: Text("server1").spaceTextStyle(.subtitle, font: .orbitron_medium), subtitle: Text("JOIN").spaceTextStyle(.subtitle, color: .cyan))
-                Button(action: { print("hi") }) {
-                    SpaceListRow {
-                        SpaceSubtitle("hello")
-                    } subtitle: {
-                        SpaceSubtitle("hello").foregroundStyle(.cyan)
-                    }
+                SpaceListRow(title: "Tappable row", subtitle: "JOIN", role: .confirm, highlighted: true) {
+                    print("tapped")
                 }
+                SpaceListRow(
+                    title: Text("server1").spaceTextStyle(.subtitle, font: .orbitron_medium),
+                    subtitle: Text("JOIN").spaceTextStyle(.subtitle, color: .cyan)
+                )
                 SpaceListRow {
                     SpaceSegmentedProgressView(counter, segments: 5)
                         .animation(.easeOut(duration: 0.2), value: counter)
                 }
             }
-            
             SpacePanel {
                 SpaceTitle("this is a panel")
             }
