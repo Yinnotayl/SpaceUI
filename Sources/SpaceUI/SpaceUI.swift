@@ -65,6 +65,7 @@ public struct SpaceButton<L: View>: View {
     
     var role: SpaceUIRole = .normal
     var highlighted: Bool = false
+    @State private var isPressed: Bool = false
     
     public init(
         role: SpaceUIRole = .normal,
@@ -130,13 +131,18 @@ public struct SpaceButton<L: View>: View {
             action()
         } label: {
             SpaceCard(highlighted: highlighted, role: role) {
-                label()
-                    .spaceSubtitle(.orbitron_medium)
+                label().spaceSubtitle(.orbitron_medium)
             }
             .spaceTitle2()
+            .scaleEffect(isPressed ? 0.98 : (highlighted ? 1.03 : 1.0))
         }
-        .buttonStyle(SpacePressStyle(highlighted: highlighted))
         .spaceHoverEffect()
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
         .animation(.bouncy, value: highlighted)
     }
 }
@@ -530,7 +536,10 @@ public struct SpaceListRow<Content: View>: View {
 
     public var body: some View {
         let card = SpaceCard(highlighted: highlighted, role: role) {
-            HStack { content }
+            HStack {
+                content
+                Spacer()
+            }
         }
 
         if let action {
@@ -573,6 +582,282 @@ public struct SpaceSegmentedProgressView: View {
     }
 }
 
+public struct SpaceJoystick: View {
+    @Binding public var offset: CGSize
+    
+    public var size: CGFloat
+    public var thumbSize: CGFloat
+    public var maxRadius: CGFloat
+    public var minDistance: CGFloat
+    public var margin: CGFloat
+    @State private var joystickActive = false
+    
+    public init(
+        offset: Binding<CGSize>,
+        size: CGFloat = 220,
+        thumbSize: CGFloat = 100,
+        maxRadius: CGFloat = 60,
+        minDistance: CGFloat = 0,
+        margin: CGFloat = 20
+    ) {
+        self._offset = offset
+        self.size = size
+        self.thumbSize = thumbSize
+        self.maxRadius = maxRadius
+        self.minDistance = minDistance
+        self.margin = margin
+    }
+    
+    public var body: some View {
+        ZStack {
+            Circle()
+                .stroke(
+                    Color.cyan.opacity(joystickActive ? 0.45 : 0.12),
+                    lineWidth: 1.5
+                )
+                .frame(width: size + 24, height: size + 24)
+                .animation(.easeInOut(duration: 0.15), value: joystickActive)
+
+            Circle()
+                .fill(.ultraThinMaterial)
+                .frame(width: size, height: size)
+            
+            ForEach([0, 90, 180, 270], id: \.self) { deg in
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(Color.white.opacity(0.15))
+                    .frame(width: 2, height: 10)
+                    .offset(y: -(size / 2) + 15)
+                    .rotationEffect(.degrees(Double(deg)))
+            }
+
+            Circle()
+                .fill(
+                    joystickActive
+                    ? Color.cyan.opacity(0.25)
+                    : Color.white.opacity(0.07)
+                )
+                .frame(width: thumbSize, height: thumbSize)
+                .overlay(
+                    Circle()
+                        .stroke(
+                            Color.cyan.opacity(joystickActive ? 0.7 : 0.2),
+                            lineWidth: 1.5
+                        )
+                )
+                .shadow(
+                    color: joystickActive
+                    ? .cyan.opacity(0.5)
+                    : .clear,
+                    radius: 18
+                )
+                .offset(offset)
+                .animation(
+                    .interpolatingSpring,
+                    value: joystickActive
+                )
+        }
+        .gesture(
+            DragGesture(minimumDistance: minDistance)
+                .onChanged { value in
+                    joystickActive = true
+                    
+                    var dx = value.translation.width
+                    var dy = value.translation.height
+                    
+                    let distance = sqrt(dx * dx + dy * dy)
+                    
+                    if distance > maxRadius + margin {
+                        dx = dx / distance * (maxRadius + margin)
+                        dy = dy / distance * (maxRadius + margin)
+                    }
+                    
+                    offset = CGSize(width: dx, height: dy)
+                }
+                .onEnded { _ in
+                    joystickActive = false
+                    withAnimation(.interactiveSpring(response: 0.25)) {
+                        offset = .zero
+                    }
+                }
+        )
+    }
+}
+
+public extension View {
+    func spaceModal<Content: View>(
+        isPresented: Binding<Bool>,
+        disableBackgroundInteraction: Bool,
+        tapOutsideToDismiss: Bool,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        self
+            .blur(radius: isPresented.wrappedValue ? 10 : 0)
+            .allowsHitTesting(!(isPresented.wrappedValue && disableBackgroundInteraction))
+            .overlay {
+                if isPresented.wrappedValue {
+                    ZStack {
+                        Color.black.opacity(0.2)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                if tapOutsideToDismiss {
+                                    withAnimation {
+                                        isPresented.wrappedValue = false
+                                    }
+                                }
+                            }
+
+                        content()
+                    }
+                    .transition(.opacity.combined(with: .blurReplace))
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: isPresented.wrappedValue)
+    }
+}
+public extension View {
+    func spaceAlert<Actions: View>(
+        isPresented: Binding<Bool>,
+        title: String,
+        subtitle: String,
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        disableBackgroundInteraction: Bool = true,
+        tapOutsideToDismiss: Bool = true,
+        @ViewBuilder actions: @escaping () -> Actions = { EmptyView() }
+    ) -> some View {
+
+        self.spaceModal(
+            isPresented: isPresented,
+            disableBackgroundInteraction: disableBackgroundInteraction,
+            tapOutsideToDismiss: tapOutsideToDismiss
+        ) {
+            SpaceAlert(
+                title: title,
+                subtitle: subtitle,
+                role: role,
+                highlighted: highlighted,
+                actions: actions
+            )
+        }
+    }
+    func spaceAlert<Label: View, Actions: View>(
+        isPresented: Binding<Bool>,
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        disableBackgroundInteraction: Bool = true,
+        tapOutsideToDismiss: Bool = true,
+        @ViewBuilder label: @escaping () -> Label,
+        @ViewBuilder actions: @escaping () -> Actions = { EmptyView() }
+    ) -> some View {
+
+        self.spaceModal(
+            isPresented: isPresented,
+            disableBackgroundInteraction: disableBackgroundInteraction,
+            tapOutsideToDismiss: tapOutsideToDismiss
+        ) {
+            SpaceAlert(
+                role: role,
+                highlighted: highlighted,
+                label: label,
+                actions: actions
+            )
+        }
+    }
+}
+public struct SpaceAlert<Label: View, Actions: View>: View {
+    var label: Label
+    var actions: Actions
+    var role: SpaceUIRole = .normal
+    var highlighted: Bool = false
+    
+    public init(
+        title: String,
+        subtitle: String,
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        @ViewBuilder actions: () -> Actions = { EmptyView() }
+    ) where Label == VStack<TupleView<(SpaceTitle, SpaceSubtitle)>> {
+        self.label = VStack {
+            SpaceTitle(title)
+            SpaceSubtitle(subtitle)
+        }
+        self.actions = actions()
+        self.role = role
+        self.highlighted = highlighted
+    }
+    
+    public init(
+        role: SpaceUIRole = .normal,
+        highlighted: Bool = false,
+        @ViewBuilder label: () -> Label,
+        @ViewBuilder actions: () -> Actions = { EmptyView() }
+    ) {
+        self.label = label()
+        self.actions = actions()
+        self.role = role
+        self.highlighted = highlighted
+    }
+    
+    public var body: some View {
+        SpaceCard(highlighted: highlighted, role: role) {
+            label
+            actions
+        }
+    }
+}
+
+public struct SpaceDropdown<Label: View, Content: View>: View {
+    var label: Label
+    var content: Content
+    @State private var isOpen: Bool = false
+    var highlighted: Bool = false
+    var role: SpaceUIRole = .normal
+    
+    public init(
+        _ title: String,
+        highlighted: Bool = false,
+        role: SpaceUIRole = .normal,
+        @ViewBuilder content: () -> Content
+    ) where Label == SpaceText {
+        self.label = SpaceText(title)
+        self.content = content()
+        self.highlighted = highlighted
+        self.role = role
+    }
+    public init(
+        highlighted: Bool = false,
+        role: SpaceUIRole = .normal,
+        @ViewBuilder label: () -> Label,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.label = label()
+        self.content = content()
+        self.highlighted = highlighted
+        self.role = role
+    }
+    
+    public var body: some View {
+        SpaceButton(role: role, highlighted: highlighted) {
+            isOpen.toggle()
+        } label: {
+            VStack(alignment: .leading) {
+                label
+                if isOpen {
+                    content
+                        .clipped()
+                        .transition(
+                            .asymmetric(
+                                insertion: .push(from: .top),
+                                removal: .push(from: .bottom)
+                            )
+                        )
+                }
+            }
+        }
+        .animation(.interpolatingSpring, value: isOpen)
+    }
+}
+
 // MARK: - Preview
 
 struct SpaceUIPreview: View {
@@ -581,6 +866,8 @@ struct SpaceUIPreview: View {
     @State private var isOn: Bool = false
     @State private var text: String = ""
     @State private var counter: CGFloat = 0
+    @State private var joystickPosition: CGSize = .zero
+    @State private var showAlert: Bool = false
     
     var body: some View {
         SpaceContainer(spacing: 20) {
@@ -600,7 +887,7 @@ struct SpaceUIPreview: View {
             SpaceSection("Space Section") {
                 SpaceListRow(title: "Space row Title", subtitle: "subtitle")
                 SpaceListRow(title: "Tappable row", subtitle: "JOIN", role: .confirm, highlighted: true) {
-                    print("tapped")
+                    showAlert = true
                 }
                 SpaceListRow(
                     title: Text("server1").spaceTextStyle(.subtitle, font: .orbitron_medium),
@@ -610,13 +897,25 @@ struct SpaceUIPreview: View {
                     SpaceSegmentedProgressView(counter, segments: 5)
                         .animation(.easeOut(duration: 0.2), value: counter)
                 }
+                SpaceListRow {
+                    SpaceText("Hello")
+                    SpaceText("Hello2")
+                }
             }
             SpacePanel {
                 SpaceTitle("this is a panel")
+                Text("this is very small text")
+                    .spaceTextStyle(1, font: .orbitron_medium)
+            }
+            SpaceDropdown("This is a dropdown") {
+                SpaceJoystick(offset: $joystickPosition)
             }
         }
         .spaceLayoutScrollable()
         .spaceBackground()
+        .spaceAlert(isPresented: $showAlert) {
+            SpaceTitle("Hi")
+        }
     }
 }
 

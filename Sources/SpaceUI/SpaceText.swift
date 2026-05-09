@@ -153,6 +153,41 @@ public extension View {
             .tracking(style.tracking)
             .foregroundStyle(resolvedColor)
     }
+    
+    @ViewBuilder
+    func spaceTextStyle(
+        _ size: CGFloat,
+        font fontOverride: SpaceFont = .orbitron_medium,
+        color: Color? = nil
+    ) -> some View {
+        let resolvedFont: Font = {
+            switch fontOverride {
+            case .orbitron_medium:
+                return .orbitron_medium(size)
+
+            case .din_alternate:
+                return .din_alternate(size)
+            }
+        }()
+
+        let resolvedColor: Color = {
+            if let color {
+                return color
+            }
+
+            switch fontOverride {
+            case .orbitron_medium:
+                return .white
+
+            case .din_alternate:
+                return .gray
+            }
+        }()
+
+        self
+            .font(resolvedFont)
+            .foregroundStyle(resolvedColor)
+    }
 }
 
 public extension View {

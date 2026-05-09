@@ -51,7 +51,7 @@ public struct SpaceSection<Content: View>: View {
             if let text {
                 Text(text).spaceTextStyle(.subtitle, font: .orbitron_medium)
             }
-            Divider()
+            Divider().overlay(Color.white)
             content
         }
     }
