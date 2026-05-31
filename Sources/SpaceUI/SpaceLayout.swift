@@ -36,22 +36,36 @@ public struct SpaceContainer<Content: View>: View {
 }
 
 public struct SpaceSection<Content: View>: View {
+    @Environment(\.spaceInheritedStyle) private var inheritedStyle
+    @Environment(\.spaceStyleTokens) private var tokens
+
     var text: String? = nil
+    var role: SpaceUIRole?
     var content: Content
+
     public init(@ViewBuilder content: () -> Content = { EmptyView() }) {
         self.content = content()
+        self.role = nil
     }
-    public init(_ text: String, @ViewBuilder content: () -> Content = { EmptyView() }) {
+
+    public init(_ text: String, role: SpaceUIRole? = nil, @ViewBuilder content: () -> Content = { EmptyView() }) {
         self.text = text
+        self.role = role
         self.content = content()
     }
     
     public var body: some View {
-        VStack(alignment: .leading) {
+        let resolvedStyle = (inheritedStyle ?? .primary)
+            .resolving(role: role, highlighted: nil)
+
+        VStack(alignment: .leading, spacing: 8) {
             if let text {
-                Text(text).spaceTextStyle(.subtitle, font: .orbitron_medium)
+                Text(text.uppercased())
+                    .spaceCaption(.orbitronMedium, color: .white.opacity(0.82))
+                    .tracking(3)
             }
-            Divider().overlay(Color.white)
+            Divider()
+                .overlay(tokens.color(for: resolvedStyle.role).opacity(0.75))
             content
         }
     }
@@ -138,5 +152,3 @@ public extension View {
         .scrollBounceBehavior(.basedOnSize)
     }
 }
-
-

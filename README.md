@@ -9,20 +9,15 @@ A custom space / sci-fi UI component library for SwiftUI apps.
 
 ## Installation
 
-Add SpaceUI to your project via Swift Package Manager:
-
 ```swift
 .package(url: "https://github.com/Yinnotayl/SpaceUI", branch: "main")
 ```
 
-Then add `"SpaceUI"` as a dependency to your target.
+Add `"SpaceUI"` as a dependency to your target.
 
 ## Setup
 
-> **Required:** You must register the space font before using any SpaceUI components. Call this once at app launch.
-```swift
-init() { SpaceFont.register() }
-```
+Register SpaceUI fonts once at app launch:
 
 ```swift
 import SpaceUI
@@ -41,266 +36,191 @@ struct MyApp: App {
 }
 ```
 
----
+## Styles
+
+SpaceUI components can inherit a shared style:
+
+```swift
+VStack {
+    SpaceCard {
+        SpaceText("Mission Control")
+    }
+
+    SpaceButton("Deploy") {
+        deploy()
+    }
+    .spaceUIStyle(.primary(role: .confirm))
+}
+.spaceUIStyle(.primary)
+```
+
+Use scoped modifiers when one component should differ without restyling nested SpaceUI elements:
+
+```swift
+SpaceCard {
+    SpaceButton("Join") {
+        join()
+    }
+}
+.spaceCardStyle(.glass(role: .confirm, highlighted: true))
+```
+
+Available styles:
+
+```swift
+.primary
+.glass
+.primary(role: .normal, highlighted: false)
+.glass(role: .confirm, highlighted: true)
+```
+
+Scoped modifiers:
+
+```swift
+.spaceCardStyle(.glass)
+.spaceListRowStyle(.glass)
+.spacePanelStyle(.glass)
+.spaceButtonStyle(.primary(role: .confirm))
+.spaceTextFieldStyle(.glass)
+```
+
+You can tune the shared style variables with `SpaceUIStyleTokens`:
+
+```swift
+ContentView()
+    .spaceStyleTokens(
+        SpaceUIStyleTokens(
+            normalColor: .cyan,
+            confirmColor: .mint,
+            destructiveColor: .red
+        )
+    )
+```
+
+## Typography
+
+SpaceUI ships Orbitron and Space Grotesk variants. Display/title/action text defaults to Orbitron; subtitle/body/caption text defaults to Space Grotesk.
+Space Grotesk styles do not add letter tracking by default.
+
+Semantic text styles:
+
+```swift
+SpaceLargeDisplay("HYPER THRUST")
+SpaceDisplay("HOST")
+SpaceDisplay2("Raider MKII")
+SpaceTitle("Mission Control")
+SpaceTitle2("Subsystems")
+SpaceSubtitle("Prepare for high speed chaos")
+SpaceText("Hull integrity nominal")
+SpaceCaption("SERVERS")
+```
+
+Modifier forms are available too:
+
+```swift
+Text("JOIN").spaceDisplay()
+Text("Tap anywhere").spaceSubtitle(.orbitronMedium, color: .white)
+Text("42").spaceTextStyle(26, font: .orbitronMedium)
+```
+
+Compatibility aliases remain available:
+
+```swift
+.orbitron_medium
+.din_alternate // deprecated alias to Space Grotesk Regular
+```
 
 ## Components
 
-### `SpaceBackground`
-
-A full-screen space background image that ignores safe area edges.
-
-```swift
-SpaceBackground()
-```
-
-#### `.spaceBackground(clipped:)` modifier
-
-Applies the space background to any view. When `clipped` is `false` (default), the background wraps the view in a `ZStack`. When `true`, it applies as a clipped `.background()`.
+### Backgrounds
 
 ```swift
 ContentView()
     .spaceBackground()
 
-// Clipped variant
-SomeCard()
-    .spaceBackground(clipped: true)
+ContentView()
+    .spaceAnimatedBackground()
 ```
 
----
+`SpaceBackground` is the existing static game background. `SpaceAnimatedBackground` layers scrolling stars and fog over it.
 
-### `SpaceText`
-
-A general-purpose text view using a space font.
+### Buttons And Cards
 
 ```swift
-SpaceText("Hello, Universe!")
+SpaceCard(title: "Warp Drive", subtitle: "Nominal")
+    .spaceUIStyle(.primary(role: .confirm))
 
-// With custom font and size
-SpaceText("Hello, Universe!", font: .orbitron_medium, size: .headline)
-```
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `text` | `String` | — | The text to display |
-| `font` | `SpaceFont` | `.orbitron_medium` | Font to use |
-| `size` | `Font.TextStyle` | `.body` | Text style / size |
-
----
-
-### `SpaceTitle`
-
-A large title-sized text view styled for space UIs.
-
-```swift
-SpaceTitle("Mission Control")
-
-// With custom font
-SpaceTitle("Mission Control", font: .din_alternate)
-```
-
----
-
-### `SpaceTitle2`
-
-A secondary title-sized text view (equivalent to `.title` style).
-
-```swift
-SpaceTitle2("Subsystem Status")
-
-// With custom font
-SpaceTitle2("Subsystem Status", font: .din_alternate)
-```
-
----
-
-### `SpaceSubtitle`
-
-A subtitle text view. Defaults to `DIN Alternate` with reduced opacity and letter spacing.
-
-```swift
-SpaceSubtitle("Orbital velocity: 7.8 km/s")
-
-// With custom font
-SpaceSubtitle("Orbital velocity: 7.8 km/s", font: .orbitron_medium)
-```
-
----
-
-### `SpaceButton`
-
-A tappable card-styled button supporting roles and highlight states.
-
-```swift
-SpaceButton(action: { print("Launched!") }) {
-    Text("Launch")
+SpaceButton("Launch") {
+    launch()
 }
+.spaceUIStyle(.primary(role: .confirm, highlighted: true))
 
-// With role and highlight
-SpaceButton(role: .confirm, highlighted: true, action: { confirm() }) {
-    Text("Confirm Launch")
+SpaceButtonTwoStep("Delete") {
+    delete()
 }
+.spaceUIStyle(.primary(role: .destructive))
 ```
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `role` | `SpaceUIRole` | `.normal` | Visual role — `.normal`, `.confirm`, or `.destructive` |
-| `highlighted` | `Bool` | `false` | Activates glowing animated border |
-| `action` | `() -> Void` | — | Action to perform on tap |
-| `label` | `@ViewBuilder` | — | Custom label view |
-
----
-
-### `SpaceToggle`
-
-A toggle built on `SpaceButton`. The button highlights when `isOn` is `true`.
+### Forms And Lists
 
 ```swift
-@State private var enginesOn = false
+SpaceTextField("Callsign", text: $callsign, placeholder: "Enter callsign")
 
-SpaceToggle(isOn: $enginesOn) {
-    Text("Engines")
-}
-
-// With string label shorthand
-SpaceToggle("Shields", isOn: $shieldsOn, role: .confirm)
-```
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `isOn` | `Binding<Bool>` | — | Binding to the toggle state |
-| `role` | `SpaceUIRole` | `.normal` | Visual role |
-| `highlighted` | `Bool?` | `nil` | Override highlight (defaults to `isOn`) |
-
----
-
-### `SpaceButtonTwoStep`
-
-A two-tap confirmation button. The first tap arms it (highlights it); the second tap fires the action. Useful for destructive or irreversible operations.
-
-```swift
-SpaceButtonTwoStep(
-    role: .destructive,
-    action: { deleteRecord() },
-    confirmAction: { print("Armed — tap again to confirm") }
-) {
-    Text("Delete Record")
-}
-```
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `role` | `SpaceUIRole` | `.normal` | Visual role |
-| `action` | `() -> Void` | — | Fired on the second (confirmed) tap |
-| `confirmAction` | `() -> Void` | `{}` | Optional callback fired when armed on first tap |
-
----
-
-### `SpaceTextField`
-
-A space-styled text input field.
-
-```swift
-@State private var callsign = ""
-
-// With title and placeholder
-SpaceTextField("Callsign", text: $callsign, placeholder: "Enter callsign...")
-
-// Without title
-SpaceTextField(text: $callsign, placeholder: "Search...")
-
-// With role
-SpaceTextField("Target", text: $target, role: .destructive)
-```
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `titleKey` | `String?` | `nil` | Optional label above the field |
-| `text` | `Binding<String>` | — | Bound text value |
-| `placeholder` | `String` | `""` | Placeholder text |
-| `role` | `SpaceUIRole` | `.normal` | Visual role |
-| `highlighted` | `Bool?` | `nil` | Optional highlight override |
-
----
-
-### `SpaceCard`
-
-A container view with a dark frosted background, rounded corners, and an animated gradient border. Used internally by other components, but available for custom layouts.
-
-```swift
-SpaceCard {
-    Text("Reactor Status: Online")
-}
-
-// Highlighted with role
-SpaceCard(highlighted: true, role: .confirm) {
-    VStack {
-        Text("All Systems Go")
-        Text("Ready for launch")
+SpaceSection("Servers") {
+    SpaceListRow(title: "Yijue's iPad", status: "JOIN") {
+        join()
     }
+    .spaceUIStyle(.glass(role: .confirm))
 }
-
-// Convenience title/subtitle initialiser
-SpaceCard(title: "Warp Drive", subtitle: "Nominal", role: .normal)
 ```
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `highlighted` | `Bool` | `false` | Activates glowing animated border |
-| `role` | `SpaceUIRole` | `.normal` | Controls border/shadow colour |
-| `content` | `@ViewBuilder` | — | Content to display inside the card |
-
----
-
-## View Modifiers
-
-### `.spaceGlow(active:)`
-
-Adds a cyan glow shadow effect to any view.
+`SpaceListRow` supports `selected` and `disabled` states for multiplayer-selector style rows:
 
 ```swift
-Image(systemName: "star.fill")
-    .spaceGlow()
-
-// Dimmed glow
-Text("Standby")
-    .spaceGlow(active: false)
+SpaceListRow(
+    title: "Server",
+    status: "CONNECTING",
+    selected: true,
+    disabled: true
+)
+.spaceListRowStyle(.glass)
 ```
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `active` | `Bool` | `true` | Full glow when `true`, dimmed when `false` |
-
----
-
-## Fonts
-
-SpaceUI includes two fonts available via the `SpaceFont` enum:
-
-| Case | Font |
-|---|---|
-| `.orbitron_medium` | Orbitron Medium — angular, futuristic |
-| `.din_alternate` | DIN Alternate — clean, technical |
-
-You can also use them directly as `Font` extensions:
+### Split View
 
 ```swift
-Text("Coordinates").font(.orbitron_medium(.title))
-Text("42.3° N, 71.1° W").font(.din_alternate(.caption))
+@State private var focusedSide: SpaceSplitSide = .right
+
+SpaceSplitView(focusedSide: $focusedSide, dimming: true) {
+    hostControls
+} rightContent: {
+    joinControls
+}
 ```
 
----
+When `dimming` is `true`, tapping the unfocused side updates `focusedSide`. When `dimming` is `false`, only the developer-controlled binding changes focus.
 
-## `SpaceUIRole`
+### Pulse Text
 
-Controls the colour theme of interactive components.
+```swift
+SpacePulseText("Tap anywhere to begin")
+```
 
-| Role | Border / Shadow Colour | Typical Use |
-|---|---|---|
-| `.normal` | Teal / Cyan | Default actions |
-| `.confirm` | Mint / Indigo | Positive / confirmation actions |
-| `.destructive` | Red / Pink | Dangerous or irreversible actions |
+## Roles
 
----
+`SpaceUIRole` controls role colors for borders, glows, and status accents:
+
+```swift
+.normal
+.confirm
+.destructive
+```
+
+## Testing
+
+```sh
+CLANG_MODULE_CACHE_PATH=/private/tmp/spaceui_module_cache swift test --disable-sandbox
+```
 
 ## License
 

@@ -3,7 +3,7 @@ import SwiftUI
 // SpaceUI.swift
 // Contains custom space-styled UI elements
 
-public enum SpaceUIRole {
+public enum SpaceUIRole: Equatable {
     case confirm
     case normal
     case destructive
@@ -60,16 +60,19 @@ private struct SpacePressStyle: ButtonStyle {
 // MARK: - SpaceButton
 
 public struct SpaceButton<L: View>: View {
+    @Environment(\.spaceInheritedStyle) private var inheritedStyle
+    @Environment(\.spaceButtonStyleOverride) private var buttonStyleOverride
+
     let label: () -> L
     let action: @MainActor () -> Void
     
-    var role: SpaceUIRole = .normal
-    var highlighted: Bool = false
+    var role: SpaceUIRole?
+    var highlighted: Bool?
     @State private var isPressed: Bool = false
     
     public init(
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
         action: @escaping @MainActor () -> Void,
         @ViewBuilder label: @escaping () -> L
     ) {
@@ -81,8 +84,8 @@ public struct SpaceButton<L: View>: View {
     
     public init(
         _ title: String,
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
         action: @escaping @MainActor () -> Void
     ) where L == Text {
         self.init(role: role, highlighted: highlighted, action: action) {
@@ -93,8 +96,8 @@ public struct SpaceButton<L: View>: View {
     public init(
         title: String,
         subtitle: String,
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
         action: @escaping @MainActor () -> Void
     ) where L == VStack<TupleView<(AnyView, AnyView)>> {
         self.label = {
@@ -111,8 +114,8 @@ public struct SpaceButton<L: View>: View {
     public init(
         title2: String,
         subtitle: String,
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
         action: @escaping @MainActor () -> Void
     ) where L == VStack<TupleView<(AnyView, AnyView)>> {
         self.label = {
@@ -127,14 +130,18 @@ public struct SpaceButton<L: View>: View {
     }
     
     public var body: some View {
+        let resolvedStyle = (buttonStyleOverride ?? inheritedStyle ?? .primary)
+            .resolving(role: role, highlighted: highlighted)
+
         Button {
             action()
         } label: {
-            SpaceCard(highlighted: highlighted, role: role) {
-                label().spaceSubtitle(.orbitron_medium)
+            SpaceCard {
+                label().spaceSubtitle(.orbitronMedium)
             }
+            .spaceCardStyle(resolvedStyle)
             .spaceTitle2()
-            .scaleEffect(isPressed ? 0.98 : (highlighted ? 1.03 : 1.0))
+            .scaleEffect(isPressed ? 0.98 : (resolvedStyle.highlighted ? 1.03 : 1.0))
         }
         .spaceHoverEffect()
         .buttonStyle(.plain)
@@ -143,7 +150,8 @@ public struct SpaceButton<L: View>: View {
                 .onChanged { _ in isPressed = true }
                 .onEnded { _ in isPressed = false }
         )
-        .animation(.bouncy, value: highlighted)
+        .animation(.bouncy, value: resolvedStyle.highlighted)
+        .environment(\.spaceButtonStyleOverride, nil)
     }
 }
 
@@ -153,12 +161,12 @@ public struct SpaceToggle<L: View>: View {
     @Binding public var isOn: Bool
     
     let label: () -> L
-    var role: SpaceUIRole = .normal
+    var role: SpaceUIRole?
     var highlightOverride: Bool? = nil
     
     public init(
         isOn: Binding<Bool>,
-        role: SpaceUIRole = .normal,
+        role: SpaceUIRole? = nil,
         highlighted: Bool? = nil,
         @ViewBuilder label: @escaping () -> L
     ) {
@@ -171,7 +179,7 @@ public struct SpaceToggle<L: View>: View {
     public init(
         _ title: String,
         isOn: Binding<Bool>,
-        role: SpaceUIRole = .normal,
+        role: SpaceUIRole? = nil,
         highlighted: Bool? = nil
     ) where L == Text {
         self.init(isOn: isOn, role: role, highlighted: highlighted) {
@@ -199,13 +207,13 @@ public struct SpaceButtonTwoStep<L: View, Trigger: Equatable>: View {
     let action: @MainActor () -> Void
     let confirmAction: @MainActor () -> Void
     
-    var role: SpaceUIRole = .normal
+    var role: SpaceUIRole?
     var disarmTrigger: Trigger
     
     @State private var isArmed: Bool = false
     
     public init(
-        role: SpaceUIRole = .normal,
+        role: SpaceUIRole? = nil,
         action: @escaping @MainActor () -> Void,
         confirmAction: @escaping @MainActor () -> Void = {},
         disarmTrigger: Trigger = false,
@@ -219,7 +227,7 @@ public struct SpaceButtonTwoStep<L: View, Trigger: Equatable>: View {
     }
     
     public init(
-        role: SpaceUIRole = .normal,
+        role: SpaceUIRole? = nil,
         action: @escaping @MainActor () -> Void,
         confirmAction: @escaping @MainActor () -> Void = {},
         disarmTrigger: Trigger,
@@ -234,7 +242,7 @@ public struct SpaceButtonTwoStep<L: View, Trigger: Equatable>: View {
     
     public init(
         _ title: String,
-        role: SpaceUIRole = .normal,
+        role: SpaceUIRole? = nil,
         disarmTrigger: Trigger = false,
         action: @escaping @MainActor () -> Void,
         confirmAction: @escaping @MainActor () -> Void = {}
@@ -246,7 +254,7 @@ public struct SpaceButtonTwoStep<L: View, Trigger: Equatable>: View {
     
     public init(
         _ title: String,
-        role: SpaceUIRole = .normal,
+        role: SpaceUIRole? = nil,
         disarmTrigger: Trigger,
         action: @escaping @MainActor () -> Void,
         confirmAction: @escaping @MainActor () -> Void = {}
@@ -277,10 +285,13 @@ public struct SpaceButtonTwoStep<L: View, Trigger: Equatable>: View {
 // MARK: - SpaceTextField
 
 public struct SpaceTextField: View {
+    @Environment(\.spaceInheritedStyle) private var inheritedStyle
+    @Environment(\.spaceTextFieldStyleOverride) private var textFieldStyleOverride
+
     var titleKey: String? = nil
     var placeholder: String = ""
     @Binding public var text: String
-    var role: SpaceUIRole = .normal
+    var role: SpaceUIRole?
     var highlighted: Bool? = nil
     
     public init(_ titleKey: String, text: Binding<String>, placeholder: String = "") {
@@ -295,7 +306,7 @@ public struct SpaceTextField: View {
         self.placeholder = placeholder
     }
     
-    public init(_ titleKey: String, text: Binding<String>, placeholder: String = "", role: SpaceUIRole = .normal, highlighted: Bool? = nil) {
+    public init(_ titleKey: String, text: Binding<String>, placeholder: String = "", role: SpaceUIRole? = nil, highlighted: Bool? = nil) {
         self._text = text
         self.titleKey = titleKey
         self.placeholder = placeholder
@@ -303,7 +314,7 @@ public struct SpaceTextField: View {
         self.role = role
     }
     
-    public init(text: Binding<String>, placeholder: String = "", role: SpaceUIRole = .normal, highlighted: Bool? = nil) {
+    public init(text: Binding<String>, placeholder: String = "", role: SpaceUIRole? = nil, highlighted: Bool? = nil) {
         self._text = text
         self.titleKey = nil
         self.placeholder = placeholder
@@ -312,83 +323,110 @@ public struct SpaceTextField: View {
     }
     
     public var body: some View {
-        SpaceCard(highlighted: highlighted ?? false, role: role) {
+        let resolvedStyle = (textFieldStyleOverride ?? inheritedStyle ?? .primary)
+            .resolving(role: role, highlighted: highlighted)
+
+        SpaceCard {
             VStack(alignment: .leading) {
                 if let titleKey {
                     Text(titleKey)
-                        .spaceSubtitle(.orbitron_medium)
+                        .spaceSubtitle(.orbitronMedium)
                 }
                 TextField(placeholder, text: $text, prompt: Text(placeholder).foregroundStyle(.gray))
                     .textFieldStyle(.plain)
                     .spaceSubtitle()
             }
         }
+        .spaceCardStyle(resolvedStyle)
+        .environment(\.spaceTextFieldStyleOverride, nil)
     }
 }
 
 // MARK: - SpacePanel
 
 public struct SpacePanel<Content: View>: View {
+    @Environment(\.spaceInheritedStyle) private var inheritedStyle
+    @Environment(\.spacePanelStyleOverride) private var panelStyleOverride
+    @Environment(\.spaceStyleTokens) private var tokens
+
     var content: Content
-    var role: SpaceUIRole = .normal
+    var role: SpaceUIRole?
+    var highlighted: Bool?
     private var customColor: Color?
 
     var color: Color {
-        customColor ?? role.color
+        customColor ?? (role ?? .normal).color
     }
 
     public init(@ViewBuilder content: () -> Content) {
         self.content = content()
-        self.role = .normal
+        self.role = nil
+        self.highlighted = nil
         self.customColor = nil
     }
     
-    public init(role: SpaceUIRole, @ViewBuilder content: () -> Content) {
+    public init(role: SpaceUIRole, highlighted: Bool? = nil, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.role = role
+        self.highlighted = highlighted
         self.customColor = nil
     }
     
     public init(color: Color, @ViewBuilder content: () -> Content) {
         self.content = content()
-        self.role = .normal
+        self.role = nil
+        self.highlighted = nil
         self.customColor = color
     }
 
     public var body: some View {
+        let resolvedStyle = (panelStyleOverride ?? inheritedStyle ?? .glass)
+            .resolving(role: role, highlighted: highlighted)
+
         VStack {
             content
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.black.opacity(0.35))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(color, lineWidth: 1)
+        .modifier(
+            SpaceSurfaceModifier(
+                style: customColor == nil
+                    ? resolvedStyle
+                    : .glass(role: .normal, highlighted: resolvedStyle.highlighted),
+                cornerRadius: tokens.panelCornerRadius,
+                padding: EdgeInsets(
+                    top: tokens.panelPadding,
+                    leading: tokens.panelPadding,
+                    bottom: tokens.panelPadding,
+                    trailing: tokens.panelPadding
                 )
+            )
         )
+        .overlay {
+            if let customColor {
+                RoundedRectangle(cornerRadius: tokens.panelCornerRadius)
+                    .stroke(customColor, lineWidth: 1)
+            }
+        }
+        .environment(\.spacePanelStyleOverride, nil)
     }
 }
 
 // MARK: - SpaceCard
 
 public struct SpaceCard<Content: View>: View {
-    @State private var rotation: Double = 0
-    
-    let duration: CGFloat = 4.5
+    @Environment(\.spaceInheritedStyle) private var inheritedStyle
+    @Environment(\.spaceCardStyleOverride) private var cardStyleOverride
     
     var content: Content
-    var highlighted: Bool = false
-    var role: SpaceUIRole
+    var highlighted: Bool?
+    var role: SpaceUIRole?
     
-    public init(highlighted: Bool = false, role: SpaceUIRole = .normal, @ViewBuilder content: () -> Content) {
+    public init(highlighted: Bool? = nil, role: SpaceUIRole? = nil, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.highlighted = highlighted
         self.role = role
     }
     
-    public init(title: String, subtitle: String, role: SpaceUIRole = .normal, highlighted: Bool = false) where Content == VStack<TupleView<(AnyView, AnyView)>> {
+    public init(title: String, subtitle: String, role: SpaceUIRole? = nil, highlighted: Bool? = nil) where Content == VStack<TupleView<(AnyView, AnyView)>> {
         self.content = VStack(alignment: .leading) {
             AnyView(Text(title).spaceTitle())
             AnyView(Text(subtitle).spaceSubtitle())
@@ -397,7 +435,7 @@ public struct SpaceCard<Content: View>: View {
         self.role = role
     }
     
-    public init(title2: String, subtitle: String, role: SpaceUIRole = .normal, highlighted: Bool = false) where Content == VStack<TupleView<(AnyView, AnyView)>> {
+    public init(title2: String, subtitle: String, role: SpaceUIRole? = nil, highlighted: Bool? = nil) where Content == VStack<TupleView<(AnyView, AnyView)>> {
         self.content = VStack(alignment: .leading) {
             AnyView(Text(title2).spaceTitle2())
             AnyView(Text(subtitle).spaceSubtitle())
@@ -407,68 +445,54 @@ public struct SpaceCard<Content: View>: View {
     }
     
     public var body: some View {
+        let resolvedStyle = (cardStyleOverride ?? inheritedStyle ?? .primary)
+            .resolving(role: role, highlighted: highlighted)
+
         VStack {
             content
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.black.opacity(0.4))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(
-                    highlighted
-                        ? role.angularGradient(angle: .degrees(rotation)).opacity(1)
-                        : role.angularGradient(angle: .degrees(rotation)).opacity(0.7),
-                    lineWidth: highlighted ? 2 : 1
-                )
-        )
-        .shadow(color: highlighted ? role.color.opacity(0.8) : .clear, radius: 25)
-        .animation(.bouncy, value: highlighted)
-        .onAppear {
-            guard highlighted else { return }
-            withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
-                rotation = 360
-            }
-        }
-        .onChange(of: highlighted) { _, isOn in
-            if isOn {
-                rotation = 0
-                withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
-                    rotation = 360
-                }
-            }
-        }
+        .modifier(SpaceSurfaceModifier(style: resolvedStyle, cornerRadius: nil, padding: nil))
+        .environment(\.spaceCardStyleOverride, nil)
     }
 }
 
 // MARK: - SpaceListRow
 
 public struct SpaceListRow<Content: View>: View {
+    @Environment(\.spaceInheritedStyle) private var inheritedStyle
+    @Environment(\.spaceListRowStyleOverride) private var listRowStyleOverride
+
     private var content: Content
-    private var role: SpaceUIRole
-    private var highlighted: Bool
+    private var role: SpaceUIRole?
+    private var highlighted: Bool?
+    private var selected: Bool
+    private var isDisabled: Bool
     private var action: (@MainActor () -> Void)?
 
     // Generic content init
     public init(
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
+        selected: Bool = false,
+        disabled: Bool = false,
         action: (@MainActor () -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.content = content()
         self.role = role
         self.highlighted = highlighted
+        self.selected = selected
+        self.isDisabled = disabled
         self.action = action
     }
 
     // Single string
     public init(
         _ text: String,
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
+        selected: Bool = false,
+        disabled: Bool = false,
         action: (@MainActor () -> Void)? = nil
     ) where Content == HStack<TupleView<(AnyView, Spacer)>> {
         self.content = HStack {
@@ -477,6 +501,8 @@ public struct SpaceListRow<Content: View>: View {
         }
         self.role = role
         self.highlighted = highlighted
+        self.selected = selected
+        self.isDisabled = disabled
         self.action = action
     }
 
@@ -484,24 +510,56 @@ public struct SpaceListRow<Content: View>: View {
     public init(
         title: String,
         subtitle: String,
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
+        selected: Bool = false,
+        disabled: Bool = false,
         action: (@MainActor () -> Void)? = nil
     ) where Content == HStack<TupleView<(AnyView, Spacer, AnyView)>> {
         self.content = HStack {
-            AnyView(Text(title).spaceSubtitle(.orbitron_medium))
+            AnyView(Text(title).spaceTextBody(.spaceGroteskMedium, color: .white))
             Spacer()
             AnyView(Text(subtitle).spaceSubtitle())
         }
         self.role = role
         self.highlighted = highlighted
+        self.selected = selected
+        self.isDisabled = disabled
+        self.action = action
+    }
+
+    public init(
+        title: String,
+        status: String,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
+        selected: Bool = false,
+        disabled: Bool = false,
+        action: (@MainActor () -> Void)? = nil
+    ) where Content == HStack<TupleView<(AnyView, Spacer, AnyView)>> {
+        self.content = HStack {
+            AnyView(Text(title).spaceTextBody(.spaceGroteskMedium, color: .white))
+            Spacer()
+            AnyView(
+                Text(status)
+                    .spaceTextBody(.orbitronMedium, color: selected ? .yellow : .cyan)
+                    .spaceGlow(active: !disabled)
+                    .opacity(disabled && !selected ? 0.3 : 1)
+            )
+        }
+        self.role = role
+        self.highlighted = highlighted
+        self.selected = selected
+        self.isDisabled = disabled
         self.action = action
     }
 
     // Title + subtitle views
     public init(
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
+        selected: Bool = false,
+        disabled: Bool = false,
         action: (@MainActor () -> Void)? = nil,
         title: some View,
         subtitle: some View
@@ -513,13 +571,17 @@ public struct SpaceListRow<Content: View>: View {
         }
         self.role = role
         self.highlighted = highlighted
+        self.selected = selected
+        self.isDisabled = disabled
         self.action = action
     }
 
     // Title + subtitle view builders
     public init(
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
+        selected: Bool = false,
+        disabled: Bool = false,
         action: (@MainActor () -> Void)? = nil,
         @ViewBuilder title: () -> some View,
         @ViewBuilder subtitle: () -> some View
@@ -531,23 +593,32 @@ public struct SpaceListRow<Content: View>: View {
         }
         self.role = role
         self.highlighted = highlighted
+        self.selected = selected
+        self.isDisabled = disabled
         self.action = action
     }
 
     public var body: some View {
-        let card = SpaceCard(highlighted: highlighted, role: role) {
-            HStack {
-                content
-                Spacer()
-            }
-        }
+        let resolvedStyle = (listRowStyleOverride ?? inheritedStyle ?? .primary)
+            .resolving(role: role, highlighted: highlighted)
 
+        let row = HStack {
+            content
+            Spacer()
+        }
+        .modifier(SpaceListRowSurfaceModifier(style: resolvedStyle, selected: selected))
+        .opacity(isDisabled ? 0.65 : 1)
+
+        let card = row
         if let action {
             Button(action: action) { card }
-                .buttonStyle(SpacePressStyle(highlighted: highlighted))
+                .buttonStyle(SpacePressStyle(highlighted: resolvedStyle.highlighted))
                 .spaceHoverEffect()
+                .disabled(isDisabled)
+                .environment(\.spaceListRowStyleOverride, nil)
         } else {
             card
+                .environment(\.spaceListRowStyleOverride, nil)
         }
     }
 }
@@ -719,8 +790,8 @@ public extension View {
         isPresented: Binding<Bool>,
         title: String,
         subtitle: String,
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
         disableBackgroundInteraction: Bool = true,
         tapOutsideToDismiss: Bool = true,
         @ViewBuilder actions: @escaping () -> Actions = { EmptyView() }
@@ -742,8 +813,8 @@ public extension View {
     }
     func spaceAlert<Label: View, Actions: View>(
         isPresented: Binding<Bool>,
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
         disableBackgroundInteraction: Bool = true,
         tapOutsideToDismiss: Bool = true,
         @ViewBuilder label: @escaping () -> Label,
@@ -767,14 +838,14 @@ public extension View {
 public struct SpaceAlert<Label: View, Actions: View>: View {
     var label: Label
     var actions: Actions
-    var role: SpaceUIRole = .normal
-    var highlighted: Bool = false
+    var role: SpaceUIRole?
+    var highlighted: Bool?
     
     public init(
         title: String,
         subtitle: String,
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
         @ViewBuilder actions: () -> Actions = { EmptyView() }
     ) where Label == VStack<TupleView<(SpaceTitle, SpaceSubtitle)>> {
         self.label = VStack {
@@ -787,8 +858,8 @@ public struct SpaceAlert<Label: View, Actions: View>: View {
     }
     
     public init(
-        role: SpaceUIRole = .normal,
-        highlighted: Bool = false,
+        role: SpaceUIRole? = nil,
+        highlighted: Bool? = nil,
         @ViewBuilder label: () -> Label,
         @ViewBuilder actions: () -> Actions = { EmptyView() }
     ) {
@@ -810,13 +881,13 @@ public struct SpaceDropdown<Label: View, Content: View>: View {
     var label: Label
     var content: Content
     @State private var isOpen: Bool = false
-    var highlighted: Bool = false
-    var role: SpaceUIRole = .normal
+    var highlighted: Bool?
+    var role: SpaceUIRole?
     
     public init(
         _ title: String,
-        highlighted: Bool = false,
-        role: SpaceUIRole = .normal,
+        highlighted: Bool? = nil,
+        role: SpaceUIRole? = nil,
         @ViewBuilder content: () -> Content
     ) where Label == SpaceText {
         self.label = SpaceText(title)
@@ -825,8 +896,8 @@ public struct SpaceDropdown<Label: View, Content: View>: View {
         self.role = role
     }
     public init(
-        highlighted: Bool = false,
-        role: SpaceUIRole = .normal,
+        highlighted: Bool? = nil,
+        role: SpaceUIRole? = nil,
         @ViewBuilder label: () -> Label,
         @ViewBuilder content: () -> Content
     ) {
@@ -875,7 +946,8 @@ struct SpaceUIPreview: View {
                 Text("SpaceUI").spaceTextStyle(.title)
                 Text("Simple SpaceUI showcase").spaceTextStyle(.subtitle)
             }
-            SpaceCard(title: "Space UI", subtitle: "Space UI is a custom UI style that feels sci-fi", role: .confirm, highlighted: true)
+            SpaceCard(title: "Space UI", subtitle: "Space UI is a custom UI style that feels sci-fi")
+                .spaceUIStyle(.glass(role: .confirm, highlighted: true))
             SpaceToggle("Space Toggle Button", isOn: $isOn)
             SpaceButton("increment") {
                 counter += 0.05
@@ -884,13 +956,16 @@ struct SpaceUIPreview: View {
                 print("action activated")
             }
             SpaceTextField("Space Text Field", text: $text, placeholder: "Type text here")
+                .spaceUIStyle(.glass)
             SpaceSection("Space Section") {
                 SpaceListRow(title: "Space row Title", subtitle: "subtitle")
-                SpaceListRow(title: "Tappable row", subtitle: "JOIN", role: .confirm, highlighted: true) {
+                    .spaceUIStyle(.glass)
+                SpaceListRow(title: "Tappable row", subtitle: "JOIN") {
                     showAlert = true
                 }
+                .spaceUIStyle(.glass(role: .confirm, highlighted: true))
                 SpaceListRow(
-                    title: Text("server1").spaceTextStyle(.subtitle, font: .orbitron_medium),
+                    title: Text("server1").spaceTextStyle(.subtitle, font: .orbitronMedium),
                     subtitle: Text("JOIN").spaceTextStyle(.subtitle, color: .cyan)
                 )
                 SpaceListRow {
@@ -905,7 +980,7 @@ struct SpaceUIPreview: View {
             SpacePanel {
                 SpaceTitle("this is a panel")
                 Text("this is very small text")
-                    .spaceTextStyle(1, font: .orbitron_medium)
+                    .spaceTextStyle(1, font: .orbitronMedium)
             }
             SpaceDropdown("This is a dropdown") {
                 SpaceJoystick(offset: $joystickPosition)
@@ -926,5 +1001,5 @@ struct SpaceUIPreview: View {
     VStack {
         SpaceText("hello")
     }
-    .spaceBackground()
+    .spaceAnimatedBackground()
 }

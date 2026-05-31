@@ -46,6 +46,14 @@ public extension Image {
     static var spaceBackground: Image {
         Image("SpaceBackground", bundle: .module)
     }
+
+    static var spaceStars: Image {
+        Image("SpaceStars", bundle: .module)
+    }
+
+    static var spaceFog: Image {
+        Image("SpaceFog", bundle: .module)
+    }
 }
 
 public struct SpaceBackground: View {
@@ -60,11 +68,92 @@ public struct SpaceBackground: View {
     }
 }
 
+public struct SpaceAnimatedBackground: View {
+    public var starOpacity: Double
+    public var fogOpacity: Double
+    public var starSpeed: CGFloat
+    public var fogSpeed: CGFloat
+
+    public init(
+        starOpacity: Double = 0.3,
+        fogOpacity: Double = 0.2,
+        starSpeed: CGFloat = 15,
+        fogSpeed: CGFloat = 50
+    ) {
+        self.starOpacity = starOpacity
+        self.fogOpacity = fogOpacity
+        self.starSpeed = starSpeed
+        self.fogSpeed = fogSpeed
+    }
+
+    public var body: some View {
+        GeometryReader { geo in
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                let t = CGFloat(timeline.date.timeIntervalSinceReferenceDate)
+
+                ZStack {
+                    SpaceBackground()
+                    scrollingLayer(
+                        Image.spaceStars,
+                        in: geo.size,
+                        offset: t * starSpeed,
+                        opacity: starOpacity
+                    )
+                    scrollingLayer(
+                        Image.spaceFog,
+                        in: geo.size,
+                        offset: t * fogSpeed,
+                        opacity: fogOpacity
+                    )
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    @ViewBuilder
+    private func scrollingLayer(
+        _ image: Image,
+        in size: CGSize,
+        offset: CGFloat,
+        opacity: Double
+    ) -> some View {
+        let height = max(size.height, 1)
+        let scroll = offset.truncatingRemainder(dividingBy: height)
+
+        ZStack {
+            image
+                .resizable()
+                .interpolation(.none)
+                .scaledToFill()
+                .frame(width: size.width, height: height)
+                .clipped()
+                .offset(y: scroll)
+            image
+                .resizable()
+                .interpolation(.none)
+                .scaledToFill()
+                .frame(width: size.width, height: height)
+                .clipped()
+                .offset(y: scroll - height)
+        }
+        .opacity(opacity)
+        .allowsHitTesting(false)
+    }
+}
+
 public extension View {
     @ViewBuilder
     func spaceBackground() -> some View {
         self
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(SpaceBackground())
+    }
+
+    @ViewBuilder
+    func spaceAnimatedBackground() -> some View {
+        self
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(SpaceAnimatedBackground())
     }
 }
