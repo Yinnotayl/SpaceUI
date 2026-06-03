@@ -199,6 +199,165 @@ public struct SpaceToggle<L: View>: View {
     }
 }
 
+// MARK: - SpaceChip
+
+public struct SpaceChip: View {
+    @Environment(\.spaceInheritedStyle) private var inheritedStyle
+    @Environment(\.spaceChipStyleOverride) private var chipStyleOverride
+    @Environment(\.spaceStyleTokens) private var tokens
+
+    @Binding private var isOn: Bool
+
+    private var onText: String
+    private var offText: String
+    private var onIcon: String?
+    private var offIcon: String?
+    private var textStyle: SpaceTextStyle
+    private var font: SpaceFont
+
+    public init(
+        _ text: String,
+        isOn: Binding<Bool>,
+        icon: String? = nil,
+        textStyle: SpaceTextStyle = .caption,
+        font: SpaceFont = .spaceGroteskSemiBold
+    ) {
+        self._isOn = isOn
+        self.onText = text
+        self.offText = text
+        self.onIcon = icon
+        self.offIcon = icon
+        self.textStyle = textStyle
+        self.font = font
+    }
+
+    public init(
+        isOn: Binding<Bool>,
+        onText: String = "ON",
+        offText: String = "OFF",
+        onIcon: String? = "power.circle.fill",
+        offIcon: String? = "power.circle",
+        textStyle: SpaceTextStyle = .caption,
+        font: SpaceFont = .spaceGroteskSemiBold
+    ) {
+        self._isOn = isOn
+        self.onText = onText
+        self.offText = offText
+        self.onIcon = onIcon
+        self.offIcon = offIcon
+        self.textStyle = textStyle
+        self.font = font
+    }
+
+    public var body: some View {
+        let baseStyle = chipStyleOverride ?? inheritedStyle ?? .glass
+        let resolvedStyle = baseStyle.resolving(
+            role: nil,
+            highlighted: isOn || baseStyle.highlighted
+        )
+
+        Button {
+            isOn.toggle()
+        } label: {
+            chipLabel
+                .spaceTextStyle(textStyle, font: font, color: foregroundColor(for: resolvedStyle))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .contentTransition(.opacity)
+                .modifier(
+                    SpaceShapeSurfaceModifier(
+                        shape: Capsule(),
+                        style: resolvedStyle,
+                        padding: EdgeInsets(top: 5, leading: 9, bottom: 5, trailing: 9)
+                    )
+                )
+        }
+        .buttonStyle(.plain)
+        .spaceHoverEffect()
+        .animation(.interactiveSpring, value: isOn)
+        .environment(\.spaceChipStyleOverride, nil)
+    }
+
+    @ViewBuilder
+    private var chipLabel: some View {
+        let text = isOn ? onText : offText
+        let icon = isOn ? onIcon : offIcon
+
+        if let icon {
+            Label(text, systemImage: icon)
+        } else {
+            Text(text)
+        }
+    }
+
+    private func foregroundColor(for style: SpaceUIStyle) -> Color {
+        guard style.highlighted else {
+            return .white.opacity(0.62)
+        }
+
+        return style.role == .normal ? .white : tokens.color(for: style.role)
+    }
+}
+
+// MARK: - SpaceIconButton
+
+public struct SpaceIconButton: View {
+    @Environment(\.spaceInheritedStyle) private var inheritedStyle
+    @Environment(\.spaceIconButtonStyleOverride) private var iconButtonStyleOverride
+    @Environment(\.spaceStyleTokens) private var tokens
+
+    private var systemName: String
+    private var accessibilityLabel: String?
+    private var size: CGFloat
+    private var action: @MainActor () -> Void
+
+    public init(
+        _ systemName: String,
+        size: CGFloat = 50,
+        accessibilityLabel: String? = nil,
+        action: @escaping @MainActor () -> Void
+    ) {
+        self.systemName = systemName
+        self.size = size
+        self.accessibilityLabel = accessibilityLabel
+        self.action = action
+    }
+
+    public var body: some View {
+        let resolvedStyle = (iconButtonStyleOverride ?? inheritedStyle ?? .glass)
+
+        Button {
+            action()
+        } label: {
+            Image(systemName: systemName)
+                .font(.title2)
+                .foregroundStyle(foregroundColor(for: resolvedStyle))
+                .contentTransition(.symbolEffect)
+                .frame(width: size, height: size)
+                .modifier(
+                    SpaceShapeSurfaceModifier(
+                        shape: Circle(),
+                        style: resolvedStyle,
+                        padding: EdgeInsets()
+                    )
+                )
+                .animation(.interactiveSpring, value: systemName)
+        }
+        .buttonStyle(.plain)
+        .spaceHoverEffect()
+        .accessibilityLabel(Text(accessibilityLabel ?? systemName))
+        .environment(\.spaceIconButtonStyleOverride, nil)
+    }
+
+    private func foregroundColor(for style: SpaceUIStyle) -> Color {
+        guard style.highlighted else {
+            return .white.opacity(0.62)
+        }
+
+        return style.role == .normal ? tokens.color(for: .normal) : tokens.color(for: style.role)
+    }
+}
+
 // MARK: - SpaceButtonTwoStep
 
 public struct SpaceButtonTwoStep<L: View, Trigger: Equatable>: View {
@@ -779,7 +938,7 @@ public extension View {
 
                         content()
                     }
-                    .transition(.opacity.combined(with: .blurReplace))
+                    .transition(.opacity)
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: isPresented.wrappedValue)
@@ -939,6 +1098,7 @@ struct SpaceUIPreview: View {
     @State private var counter: CGFloat = 0
     @State private var joystickPosition: CGSize = .zero
     @State private var showAlert: Bool = false
+    @State private var isPublic: Bool = false
     
     var body: some View {
         SpaceContainer(spacing: 20) {
@@ -948,6 +1108,18 @@ struct SpaceUIPreview: View {
             }
             SpaceCard(title: "Space UI", subtitle: "Space UI is a custom UI style that feels sci-fi")
                 .spaceUIStyle(.glass(role: .confirm, highlighted: true))
+            SpaceCard {
+                HStack {
+                    SpaceChip("PUBLIC", isOn: $isPublic, icon: "antenna.radiowaves.left.and.right")
+                        .spaceChipStyle(.glass(role: .confirm))
+                    Spacer()
+                    SpaceIconButton("xmark", accessibilityLabel: "Close") {
+                        isPublic = false
+                    }
+                    .spaceIconButtonStyle(.glass(role: .destructive))
+                }
+            }
+            .spaceUIStyle(.glass)
             SpaceToggle("Space Toggle Button", isOn: $isOn)
             SpaceButton("increment") {
                 counter += 0.05
@@ -986,7 +1158,7 @@ struct SpaceUIPreview: View {
                 SpaceJoystick(offset: $joystickPosition)
             }
         }
-        .spaceLayoutScrollable()
+        .adaptiveScrollView()
         .spaceBackground()
         .spaceAlert(isPresented: $showAlert) {
             SpaceTitle("Hi")
@@ -998,8 +1170,16 @@ struct SpaceUIPreview: View {
     SpaceUIPreview()
 }
 #Preview("SpaceUI 2") {
-    VStack {
-        SpaceText("hello")
-    }
-    .spaceAnimatedBackground()
+    @Previewable @State var focusedSide: SpaceSplitSide = .left
+    SpaceSplitView(
+        initialSide: .right,
+        dimming: false,
+        leftContent: {
+            Text("Press here to begin")
+                .spacePulse()
+        }, rightContent: {
+            
+        })
+    .ignoresSafeArea()
+    .spaceBackground(animated: true)
 }

@@ -14,6 +14,40 @@ public extension View {
 
 
 
+struct SpacePulseModifier: ViewModifier {
+    @State private var isPulsing = false
+
+    let duration: Double
+    let minOpacity: Double
+    let maxOpacity: Double
+    
+    public init(duration: Double = 1.1, minOpacity: Double = 0.3, maxOpacity: Double = 1.0) {
+        self.duration = duration
+        self.minOpacity = minOpacity
+        self.maxOpacity = maxOpacity
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(isPulsing ? maxOpacity : minOpacity)
+            .animation(
+                .easeInOut(duration: duration)
+                    .repeatForever(autoreverses: true),
+                value: isPulsing
+            )
+            .onAppear {
+                isPulsing = true
+            }
+    }
+}
+public extension View {
+    func spacePulse(duration: Double = 1.1, minOpacity: Double = 0.3, maxOpacity: Double = 1.0) -> some View {
+        modifier(SpacePulseModifier(duration: duration, minOpacity: minOpacity, maxOpacity: maxOpacity))
+    }
+}
+
+
+
 public extension View {
     @ViewBuilder
     func spaceHoverEffect() -> some View {
@@ -67,7 +101,6 @@ public struct SpaceBackground: View {
             .ignoresSafeArea()
     }
 }
-
 public struct SpaceAnimatedBackground: View {
     public var starOpacity: Double
     public var fogOpacity: Double
@@ -144,16 +177,15 @@ public struct SpaceAnimatedBackground: View {
 
 public extension View {
     @ViewBuilder
-    func spaceBackground() -> some View {
+    func spaceBackground(animated: Bool = false) -> some View {
         self
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(SpaceBackground())
-    }
-
-    @ViewBuilder
-    func spaceAnimatedBackground() -> some View {
-        self
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(SpaceAnimatedBackground())
+            .background {
+                if animated {
+                    SpaceAnimatedBackground()
+                } else {
+                    SpaceBackground()
+                }
+            }
     }
 }

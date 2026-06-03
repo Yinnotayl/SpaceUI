@@ -186,6 +186,14 @@ private struct SpaceTextFieldStyleKey: EnvironmentKey {
     static let defaultValue: SpaceUIStyle? = nil
 }
 
+private struct SpaceChipStyleKey: EnvironmentKey {
+    static let defaultValue: SpaceUIStyle? = nil
+}
+
+private struct SpaceIconButtonStyleKey: EnvironmentKey {
+    static let defaultValue: SpaceUIStyle? = nil
+}
+
 extension EnvironmentValues {
     var spaceInheritedStyle: SpaceUIStyle? {
         get { self[SpaceInheritedStyleKey.self] }
@@ -215,6 +223,16 @@ extension EnvironmentValues {
     var spaceTextFieldStyleOverride: SpaceUIStyle? {
         get { self[SpaceTextFieldStyleKey.self] }
         set { self[SpaceTextFieldStyleKey.self] = newValue }
+    }
+
+    var spaceChipStyleOverride: SpaceUIStyle? {
+        get { self[SpaceChipStyleKey.self] }
+        set { self[SpaceChipStyleKey.self] = newValue }
+    }
+
+    var spaceIconButtonStyleOverride: SpaceUIStyle? {
+        get { self[SpaceIconButtonStyleKey.self] }
+        set { self[SpaceIconButtonStyleKey.self] = newValue }
     }
 }
 
@@ -252,6 +270,14 @@ public extension View {
 
     func spaceTextFieldStyle(_ style: SpaceUIStyle) -> some View {
         environment(\.spaceTextFieldStyleOverride, style)
+    }
+
+    func spaceChipStyle(_ style: SpaceUIStyle) -> some View {
+        environment(\.spaceChipStyleOverride, style)
+    }
+
+    func spaceIconButtonStyle(_ style: SpaceUIStyle) -> some View {
+        environment(\.spaceIconButtonStyleOverride, style)
     }
 }
 
@@ -503,6 +529,109 @@ struct SpaceListRowSurfaceModifier: ViewModifier {
                         : tokens.rowGlassBorderOpacity
                 )
         )
+    }
+
+    private func startBorderAnimationIfNeeded() {
+        guard style.highlighted else { return }
+        withAnimation(.linear(duration: 4.5).repeatForever(autoreverses: false)) {
+            rotation = 360
+        }
+    }
+}
+
+struct SpaceShapeSurfaceModifier<S: InsettableShape>: ViewModifier {
+    @Environment(\.spaceStyleTokens) private var tokens
+
+    let shape: S
+    let style: SpaceUIStyle
+    var padding: EdgeInsets
+
+    @State private var rotation: Double = 0
+
+    func body(content: Content) -> some View {
+        content
+            .padding(padding)
+            .background {
+                shapeBackground
+            }
+            .overlay {
+                shape.strokeBorder(borderStyle, lineWidth: borderWidth)
+            }
+            .shadow(
+                color: style.highlighted
+                    ? tokens.color(for: style.role).opacity(tokens.highlightedShadowOpacity * 0.45)
+                    : .clear,
+                radius: style.highlighted ? 12 : 0
+            )
+            .animation(.bouncy, value: style.highlighted)
+            .onAppear(perform: startBorderAnimationIfNeeded)
+            .onChange(of: style.highlighted) { _, isHighlighted in
+                if isHighlighted {
+                    rotation = 0
+                    startBorderAnimationIfNeeded()
+                }
+            }
+    }
+
+    private var borderWidth: CGFloat {
+        style.highlighted ? tokens.highlightedBorderWidth : tokens.borderWidth
+    }
+
+    private var borderStyle: AnyShapeStyle {
+        if style.highlighted {
+            return AnyShapeStyle(
+                tokens.angularGradient(for: style.role, angle: .degrees(rotation))
+                    .opacity(tokens.highlightedBorderOpacity)
+            )
+        }
+
+        switch style.kind {
+        case .primary:
+            return AnyShapeStyle(tokens.linearGradient(for: style.role).opacity(tokens.borderOpacity))
+        case .glass:
+            return AnyShapeStyle(glassTintColor.opacity(glassBorderOpacity))
+        }
+    }
+
+    @ViewBuilder
+    private var shapeBackground: some View {
+        ZStack {
+            switch style.kind {
+            case .primary:
+                shape.fill(
+                    Color.black.opacity(
+                        style.highlighted
+                            ? tokens.primaryHighlightedFillOpacity
+                            : tokens.primaryFillOpacity
+                    )
+                )
+            case .glass:
+                shape.fill(
+                    Color.white.opacity(
+                        style.highlighted
+                            ? tokens.glassHighlightedFillOpacity
+                            : tokens.glassFillOpacity
+                    )
+                )
+                if style.role != .normal {
+                    shape.fill(
+                        tokens.color(for: style.role).opacity(
+                            style.highlighted
+                                ? tokens.glassHighlightedRoleTintOpacity
+                                : tokens.glassRoleTintOpacity
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private var glassTintColor: Color {
+        style.role == .normal ? .white : tokens.color(for: style.role)
+    }
+
+    private var glassBorderOpacity: Double {
+        style.role == .normal ? tokens.rowGlassBorderOpacity : tokens.rowGlassBorderOpacity + 0.08
     }
 
     private func startBorderAnimationIfNeeded() {

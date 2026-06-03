@@ -1,27 +1,16 @@
 import SwiftUI
 import CoreText
 
+// SpaceText.swift
+// Main typography management and resources
+
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
 import AppKit
 #endif
 
-public let spaceFontNames = [
-    "Orbitron-Regular",
-    "Orbitron-Medium",
-    "Orbitron-SemiBold",
-    "Orbitron-Bold",
-    "Orbitron-ExtraBold",
-    "Orbitron-Black",
-    "SpaceGrotesk-Light",
-    "SpaceGrotesk-Regular",
-    "SpaceGrotesk-Medium",
-    "SpaceGrotesk-SemiBold",
-    "SpaceGrotesk-Bold"
-]
-
-@discardableResult public func registerFont(
+@discardableResult func registerFont(
     named name: String,
     withExtension ext: String = "ttf",
     showSuccess: Bool = false

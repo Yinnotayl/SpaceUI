@@ -27,6 +27,12 @@ final class SpaceUITests: XCTestCase {
                 SpaceText("Telemetry")
             }
             .spacePanelStyle(.glass)
+
+            SpaceChip("AI", isOn: .constant(true), icon: "sparkles")
+                .spaceChipStyle(.glass(role: .confirm))
+
+            SpaceIconButton("xmark", accessibilityLabel: "Close") {}
+                .spaceIconButtonStyle(.glass(role: .destructive, highlighted: true))
         }
         .spaceUIStyle(.primary)
         .spaceStyleTokens(SpaceUIStyleTokens())
@@ -37,13 +43,14 @@ final class SpaceUITests: XCTestCase {
     @MainActor
     func testListRowsSplitViewAndDisplayTypographyConstruct() {
         let view = VStack {
-            SpaceLargeDisplay("HYPER")
+            SpaceLargeDisplay("HyperThrust")
             SpaceDisplay("HOST")
             SpaceDisplay2("Raider MKII")
-            SpacePulseText("Tap anywhere to begin")
+            SpaceCaption("Tap anywhere to begin")
+                .spacePulse()
 
             SpaceSection("Servers") {
-                SpaceListRow(title: "Yijue's iPad", status: "JOIN") {}
+                SpaceListRow(title: "Server 1", status: "JOIN") {}
                     .spaceListRowStyle(.glass(role: .confirm))
                 SpaceListRow(title: "Server 2", status: "CONNECTING", selected: true, disabled: true)
                     .spaceListRowStyle(.glass)

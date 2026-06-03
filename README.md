@@ -82,6 +82,8 @@ Scoped modifiers:
 .spacePanelStyle(.glass)
 .spaceButtonStyle(.primary(role: .confirm))
 .spaceTextFieldStyle(.glass)
+.spaceChipStyle(.glass(role: .confirm))
+.spaceIconButtonStyle(.glass(role: .destructive))
 ```
 
 You can tune the shared style variables with `SpaceUIStyleTokens`:
@@ -159,7 +161,30 @@ SpaceButtonTwoStep("Delete") {
     delete()
 }
 .spaceUIStyle(.primary(role: .destructive))
+
+SpaceIconButton("xmark", accessibilityLabel: "Close") {
+    close()
+}
+.spaceIconButtonStyle(.glass(role: .destructive))
 ```
+
+### Chips
+
+```swift
+SpaceChip("AI", isOn: $aiEnabled, icon: "sparkles")
+    .spaceUIStyle(.glass(role: .confirm))
+
+SpaceChip(
+    isOn: $serverPublic,
+    onText: "PUBLIC",
+    offText: "PRIVATE",
+    onIcon: "antenna.radiowaves.left.and.right",
+    offIcon: "lock"
+)
+.spaceChipStyle(.glass(role: .normal))
+```
+
+`SpaceChip` maps `isOn` to the style highlight state, so active chips get the highlighted outline/glow for the inherited or scoped role.
 
 ### Forms And Lists
 

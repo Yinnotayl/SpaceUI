@@ -19,23 +19,9 @@ let package: Package = Package(
     targets: [
         .target(
             name: "SpaceUI",
-            dependencies: [],
             path: "Sources/SpaceUI",
             resources: [
-                .process("Resources/Orbitron-Regular.ttf"),
-                .process("Resources/Orbitron-Medium.ttf"),
-                .process("Resources/Orbitron-SemiBold.ttf"),
-                .process("Resources/Orbitron-Bold.ttf"),
-                .process("Resources/Orbitron-ExtraBold.ttf"),
-                .process("Resources/Orbitron-Black.ttf"),
-                .process("Resources/SpaceGrotesk-Light.ttf"),
-                .process("Resources/SpaceGrotesk-Regular.ttf"),
-                .process("Resources/SpaceGrotesk-Medium.ttf"),
-                .process("Resources/SpaceGrotesk-SemiBold.ttf"),
-                .process("Resources/SpaceGrotesk-Bold.ttf"),
-                .process("Resources/Orbitron-OFL.txt"),
-                .process("Resources/SpaceGrotesk-OFL.txt"),
-                .process("Resources/Assets.xcassets"),
+                .process("Resources")
             ]
         ),
         .testTarget(
